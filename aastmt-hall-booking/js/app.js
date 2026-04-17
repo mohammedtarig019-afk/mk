@@ -46,6 +46,13 @@ const ALL_HALLS = {
     ]
 };
 
+const USERS_DB = {
+    "1000": { name: "أحمد (أدمن)", role: "Admin" },
+    "2000": { name: "خالد (مدير)", role: "Branch Manager" },
+    "3000": { name: "محمود (موظف)", role: "Employee" },
+    "4000": { name: "سارة (سكرتير)", role: "Secretary" }
+};
+
 // Start
 initApp();
 
@@ -90,8 +97,15 @@ function initApp() {
 function handleLogin(e) {
     e.preventDefault();
     const empId = document.getElementById("emp-id").value;
-    const username = document.getElementById("username").value;
-    let role = document.getElementById("role-select").value;
+    
+    // Check predefined users or default to Employee
+    const matchedUser = USERS_DB[empId];
+    if(!matchedUser) {
+        alert("رقم وظيفي غير مسجل بالصلاحيات! سيتم الدخول الافتراضي كموظف.");
+    }
+    
+    const username = matchedUser ? matchedUser.name : "مستخدم تجريبي";
+    let role = matchedUser ? matchedUser.role : "Employee";
     
     // Mock Delegation Check
     const isDelegated = userDelegations.find(d => d.delegatee === empId);
@@ -135,8 +149,10 @@ async function setupRoleUI() {
         
         els.calendarSection.classList.remove("hidden");
         els.reportSection.classList.remove("hidden");
+        els.pendingSection.classList.remove("hidden");
         
         setupAdminDashboard();
+        loadPendingRequests();
     } else if (currentUser.role === 'Branch Manager') {
         els.calendarSection.classList.remove("hidden");
         els.pendingSection.classList.remove("hidden");
@@ -220,10 +236,10 @@ async function handleBookingSubmit(e) {
         await createBooking({
             empId: currentUser.empId, username: currentUser.username, 
             hallId: opt.value, hallName: opt.textContent, hallType: opt.dataset.type,
-            date, slotId, status: opt.dataset.type==='multipurpose'?'PENDING':'APPROVED', ...extra
+            date, slotId, status: 'PENDING', ...extra
         });
         
-        alert("تم الحجز بنجاح!");
+        alert("تم الحجز مبدئياً! طلبك الآن قيد الانتظار لمعاينة الإدارة.");
         setupRoleUI(); // refresh stats
     } catch (err) {
         document.getElementById("booking-error").textContent = err.message;
@@ -316,6 +332,7 @@ function toggleAdminPanel(mode) {
     } else {
         els.calendarSection.classList.remove("hidden");
         els.reportSection.classList.remove("hidden");
+        if(currentUser.role === 'Admin') els.pendingSection.classList.remove("hidden");
     }
 }
 
