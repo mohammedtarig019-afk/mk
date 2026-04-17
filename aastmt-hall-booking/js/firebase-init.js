@@ -1,30 +1,29 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
 
+// User's Real Firebase Configuration
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBZtmfW6NNdtVfIRZwB1GVVUAqfkkhO4WM",
+  authDomain: "larry-a3e06.firebaseapp.com",
+  projectId: "larry-a3e06",
+  storageBucket: "larry-a3e06.firebasestorage.app",
+  messagingSenderId: "571056282672",
+  appId: "1:571056282672:web:1bb3461ee807e33de961f5",
+  measurementId: "G-5L9LPBQ90V"
 };
 
-let app, db;
+// Initialize Firebase
+let app, db, analytics;
 
-// Detect if user hasn't changed the config
-const isMock = firebaseConfig.apiKey === "YOUR_API_KEY";
-
-if (!isMock) {
-    try {
-        app = initializeApp(firebaseConfig);
-        db = getFirestore(app);
-    } catch (e) {
-        console.error("Firebase Initialization Error:", e);
-        db = null;
-    }
-} else {
-    console.warn("Using Mock Firebase Mode because config is placeholder.");
+try {
+    app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    analytics = getAnalytics(app);
+    console.log("Firebase connected successfully to larry-a3e06");
+} catch (e) {
+    console.error("Firebase Initialization Error:", e);
+    // Fallback to null for DB to trigger local storage mode in db.js
     db = null;
 }
 

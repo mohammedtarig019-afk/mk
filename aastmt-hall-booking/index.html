@@ -11,6 +11,16 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+    <!-- Error Diagnostic Script (Temporary) -->
+    <script>
+        window.onerror = function(msg, url, line) {
+            alert("خطأ عارض (Unexpected Error):\n" + msg + "\nفي السطر: " + line);
+            return false;
+        };
+        window.onunhandledrejection = function(event) {
+            alert("فشل العملية (Async Error):\n" + event.reason);
+        };
+    </script>
     <div id="app-container">
         <!-- شاشة تسجيل الدخول -->
         <section id="login-view" class="view-section active">
@@ -30,12 +40,12 @@
                         </div>
                     </div>
                     <div class="input-group">
-                        <label for="username">اسم المستخدم</label>
+                        <label for="username">اسم المستخدم (للمستخدمين الجدد)</label>
                         <div class="input-icon-wrapper">
                             <span class="input-icon">
                                 <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path></svg>
                             </span>
-                            <input type="text" id="username" required placeholder="أدخل اسمك كاملاً">
+                            <input type="text" id="username" placeholder="يمكن تركه فارغاً إذا كنت مسجلاً مسبقاً">
                         </div>
                     </div>
                     <div class="input-group">
@@ -44,112 +54,142 @@
                             <span class="input-icon">
                                 <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                             </span>
-                            <input type="password" id="password" required pattern="^(?=.*[a-zA-Z])(?=.*[0-9]).+$" title="يجب أن تحتوي كلمة المرور على أحرف إنجليزية وأرقام" placeholder="كلمة المرور (حروف انجليزية وأرقام)">
+                            <input type="password" id="password" placeholder="كلمة المرور">
                         </div>
                     </div>
                     <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem; text-align:center;">
                         للتجربة: (1000 أدمن) | (2000 مدير فرع) | (3000 موظف) | (4000 سكرتير)
                     </div>
                     <button type="submit" class="primary-btn">تسجيل الدخول</button>
+                    <button type="button" id="login-seeder-btn" class="seeder-link">تهيئة النظام (أول استخدام فقط)</button>
                 </form>
             </div>
         </section>
 
         <!-- لوحة التحكم / الواجهة الرئيسية -->
         <section id="dashboard-view" class="view-section hidden">
-            <header class="glass-header">
-                <div class="user-info">
-                    <span id="welcome-msg">مرحباً، </span>
-                    <span id="user-role-badge" class="badge"></span>
+        <header class="glass-header">
+            <div class="top-nav">
+                <div class="logo-container" style="margin:0; text-align:right;">
+                    <h1 style="font-size:1.8rem; color:var(--turquoise)">AASTMT</h1>
+                    <p style="font-size:0.8rem; margin:0;">نظام حجز القاعات</p>
                 </div>
-                <nav class="top-nav">
-                    <!-- Notification Bell for Admin -->
-                    <button id="vip-notifications-btn" class="icon-btn hidden">🔔 <span id="notif-count">0</span></button>
-                    <!-- Settings Button for Admin -->
-                    <button id="settings-nav-btn" class="secondary-btn hidden">الإعدادات</button>
-                    <button id="my-dashboard-btn" class="secondary-btn hidden">لوحاتي</button>
-                    <button id="logout-btn" class="danger-btn">تسجيل الخروج</button>
-                </nav>
-            </header>
+            </div>
+            
+            <div class="top-nav">
+                <button id="vip-notifications-btn" class="icon-btn" title="تنبيهات VIP">
+                    🔔 <span id="notif-count">0</span>
+                </button>
+                <button id="settings-nav-btn" class="icon-btn hidden" title="الإعدادات">⚙️</button>
+                <button id="my-dashboard-btn" class="secondary-btn">لوحة التحكم</button>
+                <button id="logout-btn" class="danger-btn">خروج</button>
+            </div>
+        </header>
 
-            <main class="dashboard-content">
-                
-                <!-- لوحة إحصائيات المستخدم (Employee/Secretary) -->
-                <div id="user-stats-section" class="panel hidden">
-                    <div class="stats-grid">
-                        <div class="stat-card glass-panel badge-warning">
-                            <h3>طلبات قيد الانتظار</h3>
-                            <p id="stat-pending">0</p>
-                        </div>
-                        <div class="stat-card glass-panel badge-success">
-                            <h3>طلبات مقبولة</h3>
-                            <p id="stat-approved">0</p>
-                        </div>
-                        <div class="stat-card glass-panel badge-danger">
-                            <h3>طلبات مرفوضة</h3>
-                            <p id="stat-rejected">0</p>
-                        </div>
+        <main class="dashboard-content">
+            <!-- قسم الترحيب والإحصائيات -->
+            <section id="user-stats-section" class="panel pop-in">
+                <h2 id="welcome-msg">مرحباً، مستخدم</h2>
+                <div class="stats-grid">
+                    <div class="stat-card vibrant-gradient">
+                        <h3>طلبات قيد الانتظار</h3>
+                        <p id="stat-pending">0</p>
+                    </div>
+                    <div class="stat-card orange-gradient">
+                        <h3>بانتظار موافقة المدير</h3>
+                        <p id="stat-reviewed">0</p>
+                    </div>
+                    <div class="stat-card lime-gradient">
+                        <h3>حجوزات مؤكدة</h3>
+                        <p id="stat-approved">0</p>
                     </div>
                 </div>
+            </section>
 
-                <!-- قسم حجز قاعة (للموظف والسكرتير) أو Admin -->
-                <div id="booking-section" class="panel hidden">
-                    <h2>حجز قاعة جديدة</h2>
-                    <form id="booking-form" class="glass-panel">
+            <!-- قسم اختيار نوع القاعة (Choice Cards) -->
+            <section id="booking-selection-section" class="panel pop-in">
+                <h2>ماذا تريد أن تحجز اليوم؟</h2>
+                <div class="choice-container">
+                    <div class="choice-card vibrant-gradient" id="choice-lecture">
+                        <i>👨‍🏫</i>
+                        <h3>قاعات المحاضرات</h3>
+                        <p>القاعات الدراسية والمدرجات الثابتة</p>
+                    </div>
+                    <div class="choice-card coral-gradient" id="choice-multi">
+                        <i>🎉</i>
+                        <h3>قاعات متعددة الأغراض</h3>
+                        <p>للندوات، المؤتمرات، والفعاليات الكبرى</p>
+                        <div class="lock-overlay hidden">🔒</div>
+                        <div class="locked-reason">عذراً، هذا الخيار متاح للموظفين فقط.</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- نموذج الحجز (يظهر بعد الاختيار) -->
+            <section id="booking-form-section" class="panel glass-panel hidden pop-in">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                    <h2 id="booking-form-title">إتمام عملية الحجز</h2>
+                    <button id="back-to-selection-btn" class="secondary-btn">← تغيير النوع</button>
+                </div>
+                <form id="booking-form">
+                    <div class="row">
                         <div class="input-group">
-                            <label for="hall-type">نوع القاعة المطلوبة</label>
-                            <select id="hall-type" required></select>
+                            <label>تاريخ الحجز</label>
+                            <input type="date" id="booking-date" required>
                         </div>
-                        
+                        <div class="input-group">
+                            <label>الفترة الزمنية</label>
+                            <select id="booking-slot" required></select>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>اختر القاعة</label>
+                        <select id="hall-type" required></select>
+                    </div>
+
+                    <!-- حقول السكرتارية / طلبات خاصة (E-Form) -->
+                    <div id="e-form-section" class="hidden">
+                        <hr style="margin:1.5rem 0; border:0; border-top:1px solid #e2e8f0;">
+                        <h3 style="color:var(--coral-pink)">بيانات الفعالية (E-Form)</h3>
+                        <div class="input-group">
+                            <label>الغرض من الحجز (تفصيلي)</label>
+                            <textarea id="booking-purpose" placeholder="مثال: ندوة علمية عن الذكاء الاصطناعي ومرئيات الأكاديمية..."></textarea>
+                        </div>
                         <div class="row">
                             <div class="input-group">
-                                <label for="booking-date">تاريخ اليوم</label>
-                                <input type="date" id="booking-date" required>
+                                <label>اسم الشخص المسئول</label>
+                                <input type="text" id="manager-name">
                             </div>
                             <div class="input-group">
-                                <label for="booking-slot">الفترة الزمنية (Slot)</label>
-                                <select id="booking-slot" required>
-                                    <!-- Dynamic Slots -->
-                                </select>
+                                <label>رقم الموبايل</label>
+                                <input type="tel" id="manager-mobile">
                             </div>
                         </div>
-
-                        <!-- E-Form للمتعددة الأغراض -->
-                        <div id="e-form-section" class="hidden">
-                            <h3>تفاصيل النوذج (القاعات متعددة الأغراض)</h3>
-                            
-                            <div class="input-group">
-                                <label for="booking-purpose">الهدف من الاستخدام (نوع الحدث)</label>
-                                <input type="text" id="booking-purpose">
-                            </div>
-
-                            <div class="row">
-                                <div class="input-group">
-                                    <label for="manager-name">اسم المسؤول</label>
-                                    <input type="text" id="manager-name">
-                                </div>
-                                <div class="input-group">
-                                    <label for="manager-job">الوظيفة</label>
-                                    <input type="text" id="manager-job">
-                                </div>
-                                <div class="input-group">
-                                    <label for="mobile-number">رقم الموبايل</label>
-                                    <input type="tel" id="mobile-number">
-                                </div>
-                            </div>
-
-                            <h4>المتطلبات التقنية</h4>
-                            <div class="checkbox-group">
-                                <label><input type="checkbox" id="req-mic"> ميكروفونات متنقلة <input type="number" id="mic-count" class="small-input" min="1" placeholder="العدد" disabled></label>
-                                <label><input type="checkbox" id="req-laptop"> جهاز حاسب آلي (Laptop)</label>
-                                <label><input type="checkbox" id="req-video"> أجهزة Video Conference</label>
-                            </div>
+                        <div class="input-group">
+                            <label>الوظيفة</label>
+                            <input type="text" id="manager-job">
                         </div>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="req-mic"> ميكروفونات لاسلكية</label>
+                            <input type="number" id="mic-count" class="small-input" min="1" max="5" value="1">
+                        </div>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="req-laptop"> لاب توب للعرض</label>
+                            <label><input type="checkbox" id="req-video"> Video Conference</label>
+                        </div>
+                    </div>
 
-                        <div id="booking-error" class="error-msg"></div>
-                        <button type="submit" id="submit-booking-btn" class="primary-btn">طلب حجز</button>
-                    </form>
-                </div>
+                    <p id="booking-error" class="error-msg"></p>
+                    <button type="submit" id="submit-booking-btn" class="primary-btn" style="width:100%">تأكيد طلب الحجز</button>
+                </form>
+            </section>
+
+            <!-- لوحة مدير الفرع (Manager) - Mobile Friendly -->
+            <section id="manager-approval-section" class="panel hidden pop-in">
+                <h2>الطلبات المراجعة (بانتظار اعتمادك النهائي)</h2>
+                <div id="manager-list" class="requests-grid"></div>
+            </section>
 
                 <!-- إعدادات النظام و التفويض (للمسؤول) -->
                 <div id="system-settings-section" class="panel hidden">
@@ -205,58 +245,48 @@
                                 <input type="text" id="override-emp">
                             </div>
                             <button id="grant-override-btn" class="success-btn">تفعيل الرؤية</button>
+
+                            <hr style="margin:2rem 0; border-color:var(--glass-border)">
+                            <h3>تهيئة قاعدة البيانات (System Setup)</h3>
+                            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">استخدم هذا الزر لرفع البيانات الأساسية (الغرف، الأدمن، المواعيد) إلى Firebase لأول مرة.</p>
+                            <button id="seed-db-btn" class="secondary-btn" style="width:100%; border: 1px dashed var(--accent-neon);">رفع البيانات الأساسية إلى Firebase</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- جدول الحجوزات (للمسؤول ومدير الفرع، ومن يملك استثناء) -->
-                <div id="calendar-section" class="panel hidden">
-                    <div class="filters glass-panel">
-                        <div class="filter-header">
-                            <h3>البحث المتقدم والفلاتر</h3>
-                            <div>
-                                <button id="weekly-view-btn" class="primary-btn">أسبوعي</button>
-                                <button id="monthly-view-btn" class="secondary-btn">شهري</button>
-                            </div>
-                        </div>
-                        
-                        <div class="filter-controls">
-                            <!-- Advanced Empty Filter -->
-                            <div class="input-group">
-                                <label>تاريخ</label>
-                                <input type="date" id="filter-date">
-                            </div>
-                            <div class="input-group">
-                                <label>الفترة (Slot)</label>
-                                <select id="filter-slot">
-                                    <option value="all">كل الفترات</option>
-                                </select>
-                            </div>
-                            <div class="input-group">
-                                <label>نوع القاعة</label>
-                                <select id="filter-room-type">
-                                    <option value="all">كل الأنواع</option>
-                                    <option value="lecture">محاضرات/مدرج</option>
-                                    <option value="multipurpose">متعددة الأغراض</option>
-                                </select>
-                            </div>
-                            <button id="find-empty-btn" class="success-btn" style="margin-top: 1.5rem;">بحث عن الفارغ فقط</button>
-                            <button id="apply-filters-btn" class="primary-btn" style="margin-top: 1.5rem;">عرض الجدول المقابل</button>
-                        </div>
-                        
-                        <div id="empty-search-results" class="hidden result-box text-success"></div>
-                    </div>
-                    
-                    <div class="calendar-wrapper glass-panel">
-                        <h3>الجدول <span id="cal-view-title">الأسبوعي</span></h3>
-                        <div class="legend">
-                            <span class="legend-item"><span class="color-box blue"></span> محاضرات ثابتة</span>
-                            <span class="legend-item"><span class="color-box green"></span> متعددة الأغراض</span>
-                            <span class="legend-item"><span class="color-box yellow"></span> استثنائية</span>
-                        </div>
-                        <div id="calendar-grid" class="calendar-grid"></div>
+                        <!-- جداول الحجز (Calendar View) -->
+            <section id="calendar-section" class="panel glass-panel hidden pop-in">
+                <div class="filter-header">
+                    <h2>عرض جداول الحجوزات</h2>
+                    <div class="filter-controls">
+                        <input type="date" id="filter-date">
+                        <select id="filter-slot">
+                            <option value="all">كل الفترات</option>
+                        </select>
+                        <select id="filter-room-type">
+                            <option value="all">كل القاعات</option>
+                            <option value="lecture">محاضرات</option>
+                            <option value="multipurpose">متعددة الأغراض</option>
+                        </select>
+                        <button id="apply-filters-btn" class="primary-btn">تطبيق</button>
                     </div>
                 </div>
+                
+                <h3 style="margin-top:1.5rem;">الجدول <span id="cal-view-title">الأسبوعي</span></h3>
+                <div class="legend">
+                    <div class="legend-item"><div class="color-box vibrant-gradient"></div> محاضرات</div>
+                    <div class="legend-item"><div class="color-box coral-gradient"></div> متعددة الأغراض</div>
+                </div>
+
+                <div class="calendar-wrapper">
+                    <div id="calendar-grid" class="calendar-grid">
+                        <!-- Grid injected by JS -->
+                    </div>
+                </div>
+                
+                <button id="find-empty-btn" class="secondary-btn" style="margin-top:1.5rem; width:100%;">البحث عن القاعات الفارغة المتاحة</button>
+                <div id="empty-search-results" class="result-box hidden"></div>
+            </section>
                 
                 <!-- قائمة الطلبات المعلقة (للمدير المسؤول / مدير الفرع) -->
                 <div id="pending-requests-section" class="panel hidden">
