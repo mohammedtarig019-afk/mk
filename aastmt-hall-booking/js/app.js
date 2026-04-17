@@ -29,7 +29,7 @@ const els = {
     calendarGrid: document.getElementById("calendar-grid")
 };
 
-let currentUser = JSON.parse(sessionStorage.getItem("loggedInUser") || "null");
+let currentUser = JSON.parse(localStorage.getItem("loggedInUser") || "null");
 let userDelegations = []; // Mocks
 let userOverrides = []; // Mocks
 let viewMode = 'weekly';
@@ -59,7 +59,7 @@ initApp();
 function initApp() {
     els.loginForm.addEventListener("submit", handleLogin);
     document.getElementById("logout-btn").addEventListener("click", () => {
-        sessionStorage.removeItem("loggedInUser");
+        localStorage.removeItem("loggedInUser");
         window.location.reload();
     });
     
@@ -69,6 +69,7 @@ function initApp() {
     // Navigation / Views
     els.settingsNavBtn.addEventListener("click", () => toggleAdminPanel("settings"));
     document.getElementById("my-dashboard-btn").addEventListener("click", () => toggleAdminPanel("dashboard"));
+    document.getElementById("back-to-dash-btn").addEventListener("click", () => toggleAdminPanel("dashboard"));
     
     // Settings Tabs
     document.getElementById("slots-tab-btn").addEventListener("click", (e) => switchSettingTab(e, 'slots-settings'));
@@ -97,14 +98,16 @@ function initApp() {
 function handleLogin(e) {
     e.preventDefault();
     const empId = document.getElementById("emp-id").value;
+    const inputUsername = document.getElementById("username") ? document.getElementById("username").value : "";
     
     // Check predefined users or default to Employee
     const matchedUser = USERS_DB[empId];
-    if(!matchedUser) {
-        alert("رقم وظيفي غير مسجل بالصلاحيات! سيتم الدخول الافتراضي كموظف.");
+    if(!matchedUser && !inputUsername) {
+        alert("يرجى إدخال اسم المستخدم للرقم الوظيفي الجديد.");
+        return;
     }
     
-    const username = matchedUser ? matchedUser.name : "مستخدم تجريبي";
+    const username = inputUsername || (matchedUser ? matchedUser.name : "مستخدم جديد");
     let role = matchedUser ? matchedUser.role : "Employee";
     
     // Mock Delegation Check
@@ -115,7 +118,7 @@ function handleLogin(e) {
     }
 
     currentUser = { empId, username, role, hasOverride: userOverrides.includes(empId) };
-    sessionStorage.setItem("loggedInUser", JSON.stringify(currentUser));
+    localStorage.setItem("loggedInUser", JSON.stringify(currentUser));
     
     showDashboard();
 }
