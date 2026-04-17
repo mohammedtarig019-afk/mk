@@ -204,6 +204,21 @@ async function showDashboard() {
         
         await setupRoleUI();
         await populateSlots();
+        
+        // Connection Check
+        const connBadge = document.getElementById("conn-status");
+        if (connBadge) {
+            import('./firebase-init.js').then(({db}) => {
+                if(db) {
+                    connBadge.textContent = "متصل (Online)";
+                    connBadge.className = "status-badge status-approved";
+                } else {
+                    connBadge.textContent = "محاكاة (Simulation Mode)";
+                    connBadge.className = "status-badge status-reviewed";
+                }
+            });
+        }
+        
         console.log("Dashboard loaded for:", currentUser.username);
     } catch (err) {
         console.error("Dashboard Load Error:", err);
@@ -380,6 +395,11 @@ async function loadManagerRequests() {
 }
 
 window.processRequest = async (id, newStatus) => {
+    if (newStatus === 'REJECTED') {
+        activeBookingId = id;
+        document.getElementById("reject-modal").classList.remove("hidden");
+        return;
+    }
     try {
         await updateBookingStatus(id, { status: newStatus });
         alert("تم تحديث حالة الطلب بنجاح.");
