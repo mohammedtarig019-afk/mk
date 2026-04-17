@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام حجز القاعات - AASTMT</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app-container">
+        <!-- شاشة تسجيل الدخول -->
+        <section id="login-view" class="view-section active">
+            <div class="glass-card login-card">
+                <div class="logo-container">
+                    <h1>AASTMT</h1>
+                    <p>نظام حجز القاعات</p>
+                </div>
+                <form id="login-form">
+                    <div class="input-group">
+                        <label for="emp-id">الرقم الوظيفي</label>
+                        <input type="text" id="emp-id" required placeholder="أدخل رقمك الوظيفي">
+                    </div>
+                    <div class="input-group">
+                        <label for="username">الاسم</label>
+                        <input type="text" id="username" required placeholder="أدخل اسمك">
+                    </div>
+                    <div class="input-group">
+                        <label for="password">كلمة المرور</label>
+                        <input type="password" id="password" required placeholder="أدخل كلمة المرور">
+                    </div>
+                    <div class="input-group">
+                        <label for="role-select">الدور (للمحاكاة)</label>
+                        <select id="role-select" required>
+                            <option value="Admin">Admin (مسؤول)</option>
+                            <option value="Branch Manager">Branch Manager (مدير الفرع)</option>
+                            <option value="Employee">Employee (موظف)</option>
+                            <option value="Secretary">Secretary (سكرتير)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="primary-btn">تسجيل الدخول</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- لوحة التحكم / الواجهة الرئيسية -->
+        <section id="dashboard-view" class="view-section hidden">
+            <header class="glass-header">
+                <div class="user-info">
+                    <span id="welcome-msg">مرحباً، </span>
+                    <span id="user-role-badge" class="badge"></span>
+                </div>
+                <nav class="top-nav">
+                    <!-- Notification Bell for Admin -->
+                    <button id="vip-notifications-btn" class="icon-btn hidden">🔔 <span id="notif-count">0</span></button>
+                    <!-- Settings Button for Admin -->
+                    <button id="settings-nav-btn" class="secondary-btn hidden">الإعدادات</button>
+                    <button id="my-dashboard-btn" class="secondary-btn hidden">لوحاتي</button>
+                    <button id="logout-btn" class="danger-btn">تسجيل الخروج</button>
+                </nav>
+            </header>
+
+            <main class="dashboard-content">
+                
+                <!-- لوحة إحصائيات المستخدم (Employee/Secretary) -->
+                <div id="user-stats-section" class="panel hidden">
+                    <div class="stats-grid">
+                        <div class="stat-card glass-panel badge-warning">
+                            <h3>طلبات قيد الانتظار</h3>
+                            <p id="stat-pending">0</p>
+                        </div>
+                        <div class="stat-card glass-panel badge-success">
+                            <h3>طلبات مقبولة</h3>
+                            <p id="stat-approved">0</p>
+                        </div>
+                        <div class="stat-card glass-panel badge-danger">
+                            <h3>طلبات مرفوضة</h3>
+                            <p id="stat-rejected">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- قسم حجز قاعة (للموظف والسكرتير) أو Admin -->
+                <div id="booking-section" class="panel hidden">
+                    <h2>حجز قاعة جديدة</h2>
+                    <form id="booking-form" class="glass-panel">
+                        <div class="input-group">
+                            <label for="hall-type">نوع القاعة المطلوبة</label>
+                            <select id="hall-type" required></select>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="input-group">
+                                <label for="booking-date">تاريخ اليوم</label>
+                                <input type="date" id="booking-date" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="booking-slot">الفترة الزمنية (Slot)</label>
+                                <select id="booking-slot" required>
+                                    <!-- Dynamic Slots -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- E-Form للمتعددة الأغراض -->
+                        <div id="e-form-section" class="hidden">
+                            <h3>تفاصيل النوذج (القاعات متعددة الأغراض)</h3>
+                            
+                            <div class="input-group">
+                                <label for="booking-purpose">الهدف من الاستخدام (نوع الحدث)</label>
+                                <input type="text" id="booking-purpose">
+                            </div>
+
+                            <div class="row">
+                                <div class="input-group">
+                                    <label for="manager-name">اسم المسؤول</label>
+                                    <input type="text" id="manager-name">
+                                </div>
+                                <div class="input-group">
+                                    <label for="manager-job">الوظيفة</label>
+                                    <input type="text" id="manager-job">
+                                </div>
+                                <div class="input-group">
+                                    <label for="mobile-number">رقم الموبايل</label>
+                                    <input type="tel" id="mobile-number">
+                                </div>
+                            </div>
+
+                            <h4>المتطلبات التقنية</h4>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" id="req-mic"> ميكروفونات متنقلة <input type="number" id="mic-count" class="small-input" min="1" placeholder="العدد" disabled></label>
+                                <label><input type="checkbox" id="req-laptop"> جهاز حاسب آلي (Laptop)</label>
+                                <label><input type="checkbox" id="req-video"> أجهزة Video Conference</label>
+                            </div>
+                        </div>
+
+                        <div id="booking-error" class="error-msg"></div>
+                        <button type="submit" id="submit-booking-btn" class="primary-btn">طلب حجز</button>
+                    </form>
+                </div>
+
+                <!-- إعدادات النظام و التفويض (للمسؤول) -->
+                <div id="system-settings-section" class="panel hidden">
+                    <div class="glass-panel">
+                        <h2>إعدادات النظام (System Settings)</h2>
+                        <div class="settings-tabs">
+                            <button id="slots-tab-btn" class="tab-btn active">إدارة المواعيد (Slots)</button>
+                            <button id="delegation-tab-btn" class="tab-btn">التفويض (Delegation)</button>
+                            <button id="override-tab-btn" class="tab-btn">الاستثناءات (Overrides)</button>
+                        </div>
+                        
+                        <div id="slots-settings" class="settings-content active">
+                            <h3>تعديل الفترات الزمنية</h3>
+                            <button id="ramadan-mode-btn" class="secondary-btn">تفعيل مواعيد شهر رمضان</button>
+                            <button id="normal-mode-btn" class="primary-btn">المواعيد الاعتيادية</button>
+                            <ul id="current-slots-list" class="slots-list"></ul>
+                        </div>
+                        
+                        <div id="delegation-settings" class="settings-content hidden">
+                            <h3>إعطاء صلاحية بديلة مؤقتة</h3>
+                            <form id="delegation-form">
+                                <div class="row">
+                                    <div class="input-group">
+                                        <label for="delegator-emp">الموظف الأصلي (الرقم الوظيفي)</label>
+                                        <input type="text" id="delegator-emp" required>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="delegatee-emp">الموظف البديل (الرقم الوظيفي)</label>
+                                        <input type="text" id="delegatee-emp" required>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="input-group">
+                                        <label for="del-start">تاريخ البداية</label>
+                                        <input type="date" id="del-start" required>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="del-end">تاريخ النهاية</label>
+                                        <input type="date" id="del-end" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="primary-btn">حفظ التفويض</button>
+                            </form>
+                        </div>
+                        
+                        <div id="override-settings" class="settings-content hidden">
+                            <h3>إعطاء استثناء رؤية الجداول (View Available Rooms)</h3>
+                            <div class="input-group">
+                                <label for="override-emp">الرقم الوظيفي للموظف</label>
+                                <input type="text" id="override-emp">
+                            </div>
+                            <button id="grant-override-btn" class="success-btn">تفعيل الرؤية</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- جدول الحجوزات (للمسؤول ومدير الفرع، ومن يملك استثناء) -->
+                <div id="calendar-section" class="panel hidden">
+                    <div class="filters glass-panel">
+                        <div class="filter-header">
+                            <h3>البحث المتقدم والفلاتر</h3>
+                            <div>
+                                <button id="weekly-view-btn" class="primary-btn">أسبوعي</button>
+                                <button id="monthly-view-btn" class="secondary-btn">شهري</button>
+                            </div>
+                        </div>
+                        
+                        <div class="filter-controls">
+                            <!-- Advanced Empty Filter -->
+                            <div class="input-group">
+                                <label>تاريخ</label>
+                                <input type="date" id="filter-date">
+                            </div>
+                            <div class="input-group">
+                                <label>الفترة (Slot)</label>
+                                <select id="filter-slot">
+                                    <option value="all">كل الفترات</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>نوع القاعة</label>
+                                <select id="filter-room-type">
+                                    <option value="all">كل الأنواع</option>
+                                    <option value="lecture">محاضرات/مدرج</option>
+                                    <option value="multipurpose">متعددة الأغراض</option>
+                                </select>
+                            </div>
+                            <button id="find-empty-btn" class="success-btn" style="margin-top: 1.5rem;">بحث عن الفارغ فقط</button>
+                            <button id="apply-filters-btn" class="primary-btn" style="margin-top: 1.5rem;">عرض الجدول المقابل</button>
+                        </div>
+                        
+                        <div id="empty-search-results" class="hidden result-box text-success"></div>
+                    </div>
+                    
+                    <div class="calendar-wrapper glass-panel">
+                        <h3>الجدول <span id="cal-view-title">الأسبوعي</span></h3>
+                        <div class="legend">
+                            <span class="legend-item"><span class="color-box blue"></span> محاضرات ثابتة</span>
+                            <span class="legend-item"><span class="color-box green"></span> متعددة الأغراض</span>
+                            <span class="legend-item"><span class="color-box yellow"></span> استثنائية</span>
+                        </div>
+                        <div id="calendar-grid" class="calendar-grid"></div>
+                    </div>
+                </div>
+                
+                <!-- قائمة الطلبات المعلقة (للمدير المسؤول / مدير الفرع) -->
+                <div id="pending-requests-section" class="panel hidden">
+                    <div class="glass-panel">
+                        <h3>الطلبات المعلقة</h3>
+                        <div id="requests-list"></div>
+                    </div>
+                </div>
+                
+                <!-- التقرير الصباحي اليومي (للمسؤول) -->
+                <div id="morning-report-section" class="panel hidden">
+                    <div class="glass-panel">
+                        <h3>التقرير الصباحي (الأحداث غير الثابتة اليوم)</h3>
+                        <div id="report-content"></div>
+                    </div>
+                </div>
+
+            </main>
+        </section>
+    </div>
+
+    <!-- نافذة الرفض المنبثقة (Modal) -->
+    <div id="reject-modal" class="modal hidden">
+        <div class="modal-content glass-card">
+            <h2>رفض الطلب</h2>
+            <p>يمكنك إدخال سبب الرفض لتوضيحه للمستخدم، واقتراح بديل لتعديل الطلب.</p>
+            <div class="input-group">
+                <label for="reject-reason">سبب الرفض</label>
+                <input type="text" id="reject-reason" placeholder="مثال: القاعة مشغولة بجدول ثابت">
+            </div>
+            <hr style="margin:1rem 0; border-color:var(--glass-border)">
+            <h3>طلب بديل (اختياري)</h3>
+            <div class="input-group">
+                <label for="alt-hall">قاعة بديلة</label>
+                <select id="alt-hall">
+                    <option value="">-- اختر قاعة --</option>
+                    <option value="Hall A">قاعة A</option>
+                    <option value="Hall B">قاعة B</option>
+                    <option value="Multi 1">متعددة 1</option>
+                </select>
+            </div>
+            <div class="row">
+                <div class="input-group">
+                    <label for="alt-date">تاريخ بديل</label>
+                    <input type="date" id="alt-date">
+                </div>
+                <div class="input-group">
+                    <label for="alt-slot">فترة بديلة</label>
+                    <select id="alt-slot">
+                        <option value="">-- اختر فترة --</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="confirm-reject-btn" class="danger-btn">تأكيد الرفض مع البديل</button>
+                <button id="cancel-reject-btn" class="secondary-btn">إلغاء</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- VIP Notification Modal -->
+    <div id="vip-modal" class="modal hidden">
+        <div class="modal-content glass-card">
+            <h2>إشعارات النظام الخاصة</h2>
+            <ul id="vip-list" class="slots-list"></ul>
+            <button id="close-vip-btn" class="secondary-btn" style="margin-top: 1rem;">إغلاق</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module" src="js/firebase-init.js"></script>
+    <script type="module" src="js/db.js"></script>
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
